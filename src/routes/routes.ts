@@ -5,9 +5,9 @@ const myData: Model[] = []
 type RequestBody = {name: string}
 
 const router = Router()
-
+let message:string = "Hello"
 router.get('/', (req: Request, res: Response, next: NextFunction) => {
-    res.status(200).send('Hello1')
+    res.status(200).json({message: message})
 })
 
 //Fix this baby

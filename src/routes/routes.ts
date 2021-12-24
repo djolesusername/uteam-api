@@ -1,25 +1,27 @@
 import { Router, Request, Response, NextFunction } from "express";
-import {Model} from "../models/model"
+import {User} from "../models/User"
 
-const myData: Model[] = []
-type RequestBody = {name: string}
+//const myData: object[] = []
+type RequestBody = {email: string, username: string, password: string}
 
 const router = Router()
-let message:string = "Hello"
+const message = "Hello"
 router.get('/', (req: Request, res: Response, next: NextFunction) => {
     res.status(200).json({message: message})
 })
 
 //Fix this baby
-router.post('/', (req, res, next) => {
+router.post('/new-user', (req, res, next) => {
     const body = req.body as RequestBody
-    const newItem: Model = {
+    const newUser: User = {
         id: new Date().toISOString(),
-        name: body.name
+        username: body.username,
+        email: body.email,
+        password: body.password
 
     }
-
-    myData.push(newItem)
+console.log(newUser)
+  //  myData.push(newUser)
 })
 
 

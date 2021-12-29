@@ -1,11 +1,17 @@
 import express, { Application  } from "express";
-import routes from "./routes/routes"
+import userRoutes from "./routes/routes"
 import dotenv from 'dotenv'
 dotenv.config()
- 
+import sequelize from "./config/database"
+import bodyParser from "body-parser";
 const app: Application  = express()
 
 
-app.use(routes)
 
-app.listen(process.env.APP_PORT, () => console.log("123"))
+app.use(bodyParser.json());
+app.use("/api/users", userRoutes)
+
+sequelize.sync().then(() => { 
+  app.listen(process.env.APP_PORT, () => console.log("Server up"))
+}).catch(err => console.log(err))
+

@@ -2,6 +2,9 @@ import User from "../models/User"
 import {Request, Response, NextFunction} from "express"
 import bcrypt from 'bcryptjs'
 import { validationResult } from "express-validator"
+import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv'
+dotenv.config()
 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -86,8 +89,10 @@ const postLogin = async(req: Request, res: Response, next: NextFunction) => {
           if (!!user) {
           bcrypt.compare(password, user.password )
             .then(result => {
-              if (result) {
-               return res.status(200).json({"message": "ok"})
+                      if (result && process.env.JWT_SECRET ) {
+                        
+                 const token = jwt.sign({email: user.email}, process.env.JWT_SECRET, {expiresIn: '8h'} )       
+               return res.status(200).json({"message": "OK", token: token})
               } 
               else {
                return res.status(403).json({"message": "wrong password", "email": email})

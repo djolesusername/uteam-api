@@ -1,5 +1,5 @@
 import { Router } from "express";
-import userRoutes from "../controllers/userController"
+import userControls from "../controllers/userController"
 import { check } from 'express-validator'; 
 import User from "../models/User";
 
@@ -8,13 +8,13 @@ import User from "../models/User";
 const router = Router()
 
 router.get('/',
-    userRoutes.getAllUsers
+userControls.getAllUsers
 )
-router.get('/:uid',   userRoutes.getUserbyId)
+router.get('/:uid',   userControls.getUserbyId)
 
-router.post('/signup', 
+router.post('/register', 
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            check('email').isEmail().withMessage('Please enter a valid email').custom((value, {req}) => {
+            check('email').notEmpty().isEmail().withMessage('Please enter a valid email').custom((value, {req}) => {
                 //Express validator will check for booleans, promises, errors. For promise it will wait for promise resolution
                 //in case of rejection stores it as error
                 return User.findOne({where: {email: value}}).then (user => {
@@ -23,13 +23,21 @@ router.post('/signup',
                     }
                 }) 
             }).normalizeEmail(), 
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            check('username').notEmpty().withMessage('Please enter a username').matches(/^[a-z]/).matches(/^[a-zA-Z0-9_\-\#\%\*]+$/).custom(async (value, {req}) => {
+            
+                const user = await User.findOne({ where: { username: value } });
+                if (user) {
+                    return Promise.reject('Username already taken');
+                } 
+            }), 
             check('password', 'Valid password should have at least 8 characters').isLength({min: 8}), 
-            userRoutes.postAddUser)
-router.post('/login',  check('email').isEmail().withMessage('Please enter a valid email').normalizeEmail(),  check('password').isLength({min: 8}).trim(), userRoutes.postLogin)
+            userControls.postAddUser)
+router.post('/login',  check('email').notEmpty().isEmail().withMessage('Please enter a valid email').normalizeEmail(),  check('password').notEmpty().isLength({min: 8}).trim(), userControls.postLogin)
 
 //Authorization logic needed
-router.put('/:uid', userRoutes.updateUser)
+router.put('/:uid', userControls.updateUser)
 
 //Authorization logic needed
-router.delete('/:uid',userRoutes.deleteUser)
+router.delete('/:uid',userControls.deleteUser)
 export default router

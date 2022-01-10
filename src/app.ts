@@ -1,4 +1,5 @@
 import express, { Application  } from "express";
+import profileRoutes from "./routes/profileRoutes"
 import userRoutes from "./routes/routes"
 import dotenv from 'dotenv'
 dotenv.config()
@@ -9,7 +10,10 @@ const app: Application  = express()
 
 
 app.use(bodyParser.json());
-app.use("/api/users", userRoutes)
+
+
+app.use("/profiles", profileRoutes)
+app.use("/", userRoutes)
 
 sequelize.sync().then(() => { 
   app.listen(process.env.APP_PORT, () => console.log("Server up"))

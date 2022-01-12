@@ -49,7 +49,7 @@ const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getUserbyId = async (req: Request, res: Response, next: NextFunction) => {
-    const id = Number(req.params.uid);
+    const id = Number(req.params.uid) || 0;
     const user = await User.findOne({
         where: { id: id },
     });

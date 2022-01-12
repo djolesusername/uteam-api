@@ -6,6 +6,6 @@ export class CustomError {
   constructor(message: string, status = 500, additionalInfo = "") {
     this.message = message;
     this.status = status;
-    this.additionalInfo = additionalInfo
+    this.additionalInfo = additionalInfo;
   }
 }

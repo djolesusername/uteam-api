@@ -39,7 +39,7 @@ const postAddProfile = async (req: Request, res: Response) => {
 
 const getAllProfiles = async (req: Request, res: Response) => {
     try {
-        const profiles = await Profile.findAll();
+        const profiles = await Profile.findAll({ limit: 20 });
         if (profiles) {
             res.status(200).json({ profiles: profiles });
         } else {

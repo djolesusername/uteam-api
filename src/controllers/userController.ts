@@ -39,7 +39,7 @@ const postAddUser = async (req: Request, res: Response, next: NextFunction) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
-    const users = await User.findAll();
+    const users = await User.findAll({ limit: 20 });
     if (users) {
         res.status(200).json({ users: users });
     } else {
@@ -162,43 +162,49 @@ const postLogin = async (req: Request, res: Response, next: NextFunction) => {
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });
     }
-
     const username = req.body.username;
     const password = req.body.password;
+    const email = req.body.email;
+    let user;
 
-    await User.findOne({
-        where: { username: username },
-    })
-        .then((user) => {
-            if (!user) {
-                return res
-                    .status(403)
-                    .json({ message: "user not found", username: username });
-            }
-            if (!!user) {
-                bcrypt.compare(password, user.password).then((result) => {
-                    if (result && process.env.JWT_SECRET) {
-                        const token = jwt.sign(
-                            { username: username },
-                            process.env.JWT_SECRET,
-                            { expiresIn: "8h" }
-                        );
-                        return res
-                            .status(200)
-                            .json({ message: "OK", token: token });
-                    } else {
-                        return res.status(403).json({
-                            message: "wrong password",
-                            username: username,
-                        });
-                    }
-                });
-            }
-        })
-        .catch((err) => {
-            console.log("general error");
-            console.log(err);
-        });
+    try {
+        if (username) {
+            user = await User.findOne({
+                where: { username: username },
+            });
+        } else if (email) {
+            user = await User.findOne({
+                where: { email: email },
+            });
+        }
+
+        if (!user) {
+            return res
+                .status(403)
+                .json({ message: "user not found", user: username || email });
+        }
+        if (!!user) {
+            bcrypt.compare(password, user.password).then((result) => {
+                if (result && process.env.JWT_SECRET) {
+                    const token = jwt.sign(
+                        { username: username },
+                        process.env.JWT_SECRET,
+                        { expiresIn: "8h" }
+                    );
+                    return res
+                        .status(200)
+                        .json({ message: "OK", token: token });
+                } else {
+                    return res.status(403).json({
+                        message: "wrong password",
+                        username: username,
+                    });
+                }
+            });
+        }
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
 };
 
 const userControls = {

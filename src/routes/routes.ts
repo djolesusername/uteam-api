@@ -3,8 +3,6 @@ import userControls from "../controllers/userController";
 import { check, oneOf } from "express-validator";
 import User from "../models/User";
 
-//const myData: object[] = []
-
 const router = Router();
 
 router.get("/", userControls.getAllUsers);
@@ -16,8 +14,8 @@ router.post(
         .notEmpty()
         .isEmail()
         .withMessage("Please enter a valid email")
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        .custom((value, { req }) => {
+        .normalizeEmail()
+        .custom(async (value) => {
             //Express validator will check for booleans, promises, errors. For promise it will wait for promise resolution
             //in case of rejection stores it as error
             return User.findOne({ where: { email: value } }).then((user) => {
@@ -25,15 +23,12 @@ router.post(
                     return Promise.reject("Email already in use");
                 }
             });
-        })
-        .normalizeEmail(),
+        }),
     check("username")
         .notEmpty()
         .withMessage("Please enter a username")
-        .matches(/^[a-z]/)
-        .matches(/^[a-zA-Z0-9_\-\#\%\*]+$/)
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        .custom(async (value, { req }) => {
+        .matches(/^[a-z][a-zA-Z0-9_\-\#\%\*]+$/)
+        .custom(async (value) => {
             const user = await User.findOne({ where: { username: value } });
             if (user) {
                 return Promise.reject("Username already taken");
@@ -45,18 +40,18 @@ router.post(
     ).isLength({ min: 8 }),
     userControls.postAddUser
 );
+
+
 router.post(
     "/login",
     oneOf([
         check("username")
-            .matches(/^[a-z]/)
-            .matches(/^[a-zA-Z0-9_\-\#\%\*]+$/),
+            .matches(/^[a-z][a-zA-Z0-9_\-\#\%\*]+$/),
         check("email")
             .notEmpty()
             .isEmail()
             .withMessage("Please enter a valid email")
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            .custom((value, { req }) => {
+            .custom((value) => {
                 //Express validator will check for booleans, promises, errors. For promise it will wait for promise resolution
                 //in case of rejection stores it as error
                 return User.findOne({ where: { email: value } }).then(
@@ -81,8 +76,7 @@ router.put(
     check("username")
         .notEmpty()
         .withMessage("Please enter a username")
-        .matches(/^[a-z]/)
-        .matches(/^[a-zA-Z0-9_\-\#\%\*]+$/),
+        .matches(/^[a-z][a-zA-Z0-9_\-\#\%\*]+$/),
     check("password").notEmpty().isLength({ min: 8 }).trim(),
     check("email")
         .notEmpty()
@@ -94,4 +88,5 @@ router.put(
 
 //Authorization logic needed
 router.delete("/:uid", userControls.deleteUser);
+
 export default router;

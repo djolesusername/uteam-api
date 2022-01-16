@@ -1,14 +1,15 @@
-import User from "../models/User";
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
 import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+
+import User from "../models/User";
 import Profile from "../models/Profile";
+
 dotenv.config();
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const postAddUser = async (req: Request, res: Response, next: NextFunction) => {
+const postAddUser = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         console.log(errors);
@@ -23,45 +24,39 @@ const postAddUser = async (req: Request, res: Response, next: NextFunction) => {
 
     try {
         await User.create({
-            username: username,
-            password: password,
-            email: email,
+            username, password, email,
         }).then((result) => {
-            // console.log(result);
-            console.log("Created User");
-            console.log(result);
+            console.log("Created new User", result);
         });
     } catch (err) {
         console.log(err);
     }
+
     res.status(201).json("User created");
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
+const getAllUsers = async (req: Request, res: Response) => {
     const users = await User.findAll({ limit: 20 });
     if (users) {
-        res.status(200).json({ users: users });
+        res.status(200).json({ users });
     } else {
         res.status(404).json({ message: "User not found" });
     }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getUserbyId = async (req: Request, res: Response, next: NextFunction) => {
+const getUserbyId = async (req: Request, res: Response) => {
     const id = Number(req.params.uid) || 0;
     const user = await User.findOne({
-        where: { id: id },
+        where: { id },
     });
     if (user) {
-        res.status(200).json({ user: user });
+        res.status(200).json({ user });
     } else {
         res.status(404).json({ message: "User not found" });
     }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+const deleteUser = async (req: Request, res: Response) => {
     //We are checking if user has a profile. If so, profile is being deleted and then the user
 
     const id = Number(req.params.uid);
@@ -99,7 +94,6 @@ const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -108,21 +102,25 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });
     }
+
     const id = Number(req.params.uid) || 0;
     const password =
         req.body.password && (await bcrypt.hash(req.body.password, 12));
     const email = req.body.email;
     const user = await User.findOne({
-        where: { id: id },
+        where: { id },
     });
+
     //username in jwt token and not editable at the moment
     const username = user?.username;
     //allowing email change at the moment as long as email is not assigned to a different user
     let userEmail;
+
     if (email !== user?.email) {
         userEmail = await User.findOne({
-            where: { email: email },
+            where: { email },
         });
+
         if (userEmail) {
             res.status(422).json({ message: "email already in use" });
             return next();
@@ -134,9 +132,7 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
         if (user && username) {
             await User.update(
                 {
-                    username: username,
-                    password: password,
-                    email: email,
+                    username, password, email,
                 },
                 {
                     where: {
@@ -153,8 +149,7 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const postLogin = async (req: Request, res: Response, next: NextFunction) => {
+const postLogin = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         console.log(errors);
@@ -162,9 +157,7 @@ const postLogin = async (req: Request, res: Response, next: NextFunction) => {
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });
     }
-    const username = req.body.username;
-    const password = req.body.password;
-    const email = req.body.email;
+    const { username, password, email } = req.body;
     let user;
 
     try {
@@ -183,31 +176,38 @@ const postLogin = async (req: Request, res: Response, next: NextFunction) => {
                 .status(403)
                 .json({ message: "user not found", user: username || email });
         }
-        if (!!user) {
-            bcrypt.compare(password, user.password).then((result) => {
-                if (result && process.env.JWT_SECRET) {
-                    const token = jwt.sign(
-                        { username: username },
-                        process.env.JWT_SECRET,
-                        { expiresIn: "8h" }
-                    );
-                    return res
-                        .status(200)
-                        .json({ message: "OK", token: token });
-                } else {
-                    return res.status(403).json({
-                        message: "wrong password",
-                        username: username,
-                    });
-                }
+
+        // check if password matches
+        const result = await bcrypt.compare(password, user.password);
+        if (!result) {
+            return res.status(403).json({
+                message: "Wrong password",
+                username: username || email,
             });
         }
+
+        // if process.env.JWT_SECRET is not defined throw an 500 error
+        if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET is not defined");
+        }
+
+        // create a token
+        const token = jwt.sign(
+            { username: username },
+            process.env.JWT_SECRET,
+            { expiresIn: "8h" }
+        );
+
+        return res
+            .status(200)
+            .json({ message: "OK", token: token });
+
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
 };
 
-const userControls = {
+export default {
     postAddUser,
     getAllUsers,
     getUserbyId,
@@ -215,4 +215,3 @@ const userControls = {
     updateUser,
     postLogin,
 };
-export default userControls;

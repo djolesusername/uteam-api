@@ -21,30 +21,32 @@ const postAddProfile = async (req: Request, res: Response) => {
             where: { user: userid },
         });
 
-        if (!profile) {
-            await Profile.create({
-                name: name,
-                profilePhoto: profilePhoto,
-                status: status,
-                user: userid,
-            });
-            res.status(200).json({ message: "Profile created" });
-        } else {
+        if (profile) {
             res.status(400).json({ message: "Profile already exsists" });
         }
+
+        await Profile.create({
+            name: name,
+            profilePhoto: profilePhoto,
+            status: status,
+            user: userid,
+        });
+
+        res.status(200).json({ message: "Profile created" });
     } catch (err) {
-        res.status(500).json({ message: "error adding profile" });
+        res.status(500).json({ message: "Error adding profile" });
     }
 };
 
 const getAllProfiles = async (req: Request, res: Response) => {
     try {
         const profiles = await Profile.findAll({ limit: 20 });
-        if (profiles) {
-            res.status(200).json({ profiles: profiles });
-        } else {
+
+        if (!profiles) {
             res.status(404).json({ message: "No profiles found" });
         }
+
+        res.status(200).json({ profiles: profiles });
     } catch (err) {
         res.status(500).json({ message: "error loading profiles" });
     }

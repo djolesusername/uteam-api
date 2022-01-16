@@ -1,20 +1,26 @@
 import express, {
-    Application,
     NextFunction,
     Request,
     Response,
     ErrorRequestHandler,
 } from "express";
+import dotenv from "dotenv";
+import bodyParser from "body-parser";
+
 import profileRoutes from "./routes/profileRoutes";
 import userRoutes from "./routes/routes";
-import dotenv from "dotenv";
-dotenv.config();
 import sequelize from "./config/database";
-import bodyParser from "body-parser";
-const app: Application = express();
 
+// load configuration from .env file
+dotenv.config();
+
+// create express app
+const app = express();
+
+// parse JSON bodies (as sent by API clients)
 app.use(bodyParser.json());
 
+// Define routes
 app.use("/profiles", profileRoutes);
 app.use("/", userRoutes);
 
@@ -30,6 +36,7 @@ app.use(function (
     res.status(500).send("Something broke!");
 });
 
+// first initialize the database and then start the server
 sequelize
     .sync()
     .then(() => {

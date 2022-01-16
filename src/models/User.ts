@@ -13,8 +13,7 @@ type UserCreationAttributes = Optional<UserAtributes, "id">;
 
 class User
     extends Model<UserAtributes, UserCreationAttributes>
-    implements UserAtributes
-{
+    implements UserAtributes {
     public id!: number; // Note that the `null assertion` `!` is required in strict mode.
     public username!: string;
     public email!: string;
@@ -30,7 +29,6 @@ User.init(
             type: DataTypes.INTEGER.UNSIGNED,
             autoIncrement: true,
             primaryKey: true,
-
             unique: true,
         },
         username: {

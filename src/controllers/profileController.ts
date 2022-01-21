@@ -1,4 +1,5 @@
 import Profile from "../models/Profile";
+import Company from "../models/companies";
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import dotenv from "dotenv";
@@ -30,6 +31,7 @@ const postAddProfile = async (req: Request, res: Response) => {
             profilePhoto: profilePhoto,
             status: status,
             user: userid,
+            company: null,
         });
 
         res.status(200).json({ message: "Profile created" });
@@ -48,6 +50,7 @@ const getAllProfiles = async (req: Request, res: Response) => {
 
         res.status(200).json({ profiles: profiles });
     } catch (err) {
+        console.log(err);
         res.status(500).json({ message: "error loading profiles" });
     }
 };
@@ -106,6 +109,7 @@ const updateProfile = async (req: Request, res: Response) => {
 
     const name = req.body.name;
     const profilePhoto = req.body.profilePhoto;
+    const company = req.body.company || profile?.company;
     try {
         if (profile) {
             await Profile.update(
@@ -114,6 +118,7 @@ const updateProfile = async (req: Request, res: Response) => {
                     profilePhoto: profilePhoto,
                     status: Status.PENDING,
                     user: id,
+                    company,
                 },
                 {
                     where: {
@@ -125,6 +130,7 @@ const updateProfile = async (req: Request, res: Response) => {
                 message: `user ${id} updated`,
                 name,
                 profilePhoto,
+                company,
             });
         } else {
             res.status(404).json({ message: `Profile not found` });

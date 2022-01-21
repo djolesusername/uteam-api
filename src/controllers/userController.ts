@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { UserRole } from "../types/types";
 
 import User from "../models/User";
 import Profile from "../models/Profile";
@@ -21,10 +22,14 @@ const postAddUser = async (req: Request, res: Response) => {
     const email = req.body.email;
     const password =
         req.body.password && (await bcrypt.hash(req.body.password, 12));
+    const role = UserRole.COMPANYUSER;
 
     try {
         await User.create({
-            username, password, email,
+            username,
+            password,
+            email,
+            role,
         }).then((result) => {
             console.log("Created new User", result);
         });
@@ -132,7 +137,10 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
         if (user && username) {
             await User.update(
                 {
-                    username, password, email,
+                    username,
+                    password,
+                    email,
+                    role: UserRole.COMPANYUSER,
                 },
                 {
                     where: {
@@ -192,16 +200,11 @@ const postLogin = async (req: Request, res: Response) => {
         }
 
         // create a token
-        const token = jwt.sign(
-            { username: username },
-            process.env.JWT_SECRET,
-            { expiresIn: "8h" }
-        );
+        const token = jwt.sign({ username: username }, process.env.JWT_SECRET, {
+            expiresIn: "8h",
+        });
 
-        return res
-            .status(200)
-            .json({ message: "OK", token: token });
-
+        return res.status(200).json({ message: "OK", token: token });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }

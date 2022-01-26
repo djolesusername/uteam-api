@@ -2,7 +2,7 @@
 
 Nodejs Rest API to register and login users.
 
-The project is implemented as part the InterShip in Quantox Techologies.
+The project is implemented as part the Internship in Quantox Techologies.
 
 ### env file
 

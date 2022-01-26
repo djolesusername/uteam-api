@@ -1,7 +1,6 @@
 import { Router } from "express";
 import companyControls from "../controllers/companiesController";
 import { check } from "express-validator";
-import User from "../models/User";
 
 const router = Router();
 
@@ -10,32 +9,21 @@ router.get("/:uid", companyControls.getCompanybyId);
 
 router.post(
     "/",
-    /*  check("name").notEmpty().withMessage("Name is needed"),
-    check("profilePhoto").isURL(),
-    check("id").custom(async (value) => {
-        const user = await User.findOne({ where: { id: value } });
-        if (!user) {
-            return Promise.reject("User not found - profile cannot be created");
-        }
-    }),
-    */
+     check("name").notEmpty().withMessage("Name is needed").matches(/^[a-zA-Z0-9 ]+$/i),
+    check("logo").isURL(),
+   
+    
     companyControls.addCompany
 );
 
 //Authorization logic needed
 router.put(
     "/:id",
-    /* check("name").notEmpty().withMessage("Name is needed"),
-    check("profilePhoto").isURL(),
-    check("id").custom(async (value) => {
-        const user = await User.findOne({ where: { id: value } });
-        if (!user) {
-            return Promise.reject(
-                "User not found - profile cannot be accessed"
-            );
-        }
-    }),
-    */
+   check("name").notEmpty().withMessage("Name is needed").matches(/^[a-zA-Z0-9 ]+$/i),
+
+    check("logo").isURL(),
+   
+   
     companyControls.updateCompany
 );
 

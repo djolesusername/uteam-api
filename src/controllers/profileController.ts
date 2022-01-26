@@ -1,5 +1,4 @@
 import Profile from "../models/Profile";
-import Company from "../models/companies";
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import dotenv from "dotenv";
@@ -11,6 +10,8 @@ const postAddProfile = async (req: Request, res: Response) => {
     const profilePhoto: string = req.body.profilePhoto;
     const status: Status = Status.PENDING;
     const userid = parseFloat(req.params.id);
+    const company = req.body.company || null;
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res
@@ -31,7 +32,7 @@ const postAddProfile = async (req: Request, res: Response) => {
             profilePhoto: profilePhoto,
             status: status,
             user: userid,
-            company: null,
+            company,
         });
 
         res.status(200).json({ message: "Profile created" });

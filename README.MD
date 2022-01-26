@@ -25,41 +25,48 @@ ENVIRONMENT="production"
 
 Clone project from github, install dependencies with `npm install` and run the server in development mode with `npm dev`.
 
--   `npm run dev` -> Developer mode
--   `npm run build` -> Compile JS
--   `npm run start` -> Run JS
--   `npm run lint` -> Lint
--   `npm run format` -> format to comply with linting rules
+- `npm run dev` -> Developer mode
+- `npm run build` -> Compile JS
+- `npm run start` -> Run JS
+- `npm run lint` -> Lint
+- `npm run format` -> format to comply with linting rules
 
 ## requests response format
 
+- `POST /register` (email -> unique, password(min 8), username)
+- `POST /login` (email, password) returns email and web token
+
 **/users**
 
--   `GET /` all users returns json object with requested information
--   `GET /{userId}` get user by ID returns json object with requested information
--   `PUT /{userId}`
--   `DELETE /{userId}` -> Checks for user profile and delets it before it removes a user
-
--   `POST /register` (email -> unique, password(min 8), username)
--   `POST /login` (email, password) returns email and web token
+- `GET /` all users returns json object with requested information
+- `GET /{userId}` get user by ID returns json object with requested information
+- `PUT /{userId}`
+- `DELETE /{userId}` -> Checks for user profile and delets it before it removes a user
 
 **/profiles**
 
--   `GET /` all users returns json object with requested information
--   `GET /{profileId}` get user by ID returns json object with requested information
--   `PUT /{profileId}`
--   `DELETE /{profileId}`
+- `GET /` all users returns json object with requested information
+- `GET /{profileId}` get user by ID returns json object with requested information
+- `PUT /{profileId}`
+- `DELETE /{profileId}`
+
+**/companies**
+
+- `GET /` all companies returns json object with requested information
+- `GET /{companyId}` get company by ID returns json object with requested information
+- `PUT /{companyId}`
+- `DELETE /{companyId}`
 
 **to do**
 
 Current user logic is able to encryprt passwords with bcryptjs and check if provided password matches saved in the db. Current logic doesn't provide:
 
--   [ ] proper password reset logic (with email confirmation or similar security guard)
--   [ ] crsf protection
--   [ ] authorization logic
--   [ ] userRole logic while editing user
+- [ ] proper password reset logic (with email confirmation or similar security guard)
+- [ ] crsf protection
+- [ ] authorization logic
+- [ ] userRole logic while editing user
 
 ## Changelog
 
--   Branch **01SQL**: adding Linting, mySQL, Sequlize, User model, validation around Usermodel
--   Branch **02ProfileModel**: addedd Profile Model, made changes to user model so logic follows the relationship user/model
+- Branch **01SQL**: adding Linting, mySQL, Sequlize, User model, validation around Usermodel
+- Branch **02ProfileModel**: addedd Profile Model, made changes to user model so logic follows the relationship user/model

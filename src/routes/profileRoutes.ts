@@ -7,7 +7,7 @@ const router = Router();
 
 router.get("/", profileControls.getAllProfiles);
 router.get("/:uid", profileControls.getProfilebyId);
-
+/*
 router.post(
     "/:id",
     check("name").notEmpty().withMessage("Name is needed"),
@@ -20,7 +20,7 @@ router.post(
     }),
     profileControls.postAddProfile
 );
-
+*/
 //Authorization logic needed
 router.put(
     "/:id",

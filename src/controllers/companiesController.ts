@@ -4,9 +4,8 @@ import dotenv from "dotenv";
 import slugify from "../util/slug";
 import Company from "../models/companies";
 
-
 dotenv.config();
-
+/*
 const addCompany = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -32,7 +31,7 @@ const addCompany = async (req: Request, res: Response) => {
         console.log(err);
     }
 };
-
+*/
 const getCompanies = async (req: Request, res: Response) => {
     const companies = await Company.findAll({ limit: 20 });
     if (companies) {
@@ -55,7 +54,6 @@ const getCompanybyId = async (req: Request, res: Response) => {
 };
 
 const deleteCompany = async (req: Request, res: Response) => {
-
     const id = Number(req.params.uid);
 
     try {
@@ -104,7 +102,7 @@ const updateCompany = async (req: Request, res: Response) => {
                 {
                     name,
                     logo,
-slug,
+                    slug,
                 },
                 {
                     where: {
@@ -115,7 +113,8 @@ slug,
             res.status(200).json({
                 message: `company ${id} updated`,
                 name,
-logo,                company,
+                logo,
+                company,
             });
         } else {
             res.status(404).json({ message: `Company not found` });
@@ -123,8 +122,6 @@ logo,                company,
     } catch (err) {
         res.status(500).json({ message: "Something went wrong" });
     }
-
-
 };
 
 export default {
@@ -132,5 +129,5 @@ export default {
     getCompanybyId,
     deleteCompany,
     updateCompany,
-    addCompany,
+    //addCompany,
 };

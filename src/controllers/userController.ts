@@ -4,7 +4,7 @@ import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { UserRole } from "../types/types";
-
+import passport from "passport";
 import User from "../models/User";
 import Profile from "../models/Profile";
 
@@ -22,8 +22,7 @@ const postAddUser = async (req: Request, res: Response) => {
     const email = req.body.email;
     const password =
         req.body.password && (await bcrypt.hash(req.body.password, 12));
-    const role = UserRole.COMPANYUSER;
-
+    const role = UserRole.COMPANYADMIN;
     try {
         await User.create({
             username,
@@ -31,7 +30,8 @@ const postAddUser = async (req: Request, res: Response) => {
             email,
             role,
         }).then((result) => {
-            console.log("Created new User", result);
+            console.log("Created new User");
+            console.log(result.id);
         });
     } catch (err) {
         console.log(err);
@@ -118,6 +118,7 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
 
     //username in jwt token and not editable at the moment
     const username = user?.username;
+    const role = user?.role;
     //allowing email change at the moment as long as email is not assigned to a different user
     let userEmail;
 
@@ -140,7 +141,7 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
                     username,
                     password,
                     email,
-                    role: UserRole.COMPANYUSER,
+                    role,
                 },
                 {
                     where: {

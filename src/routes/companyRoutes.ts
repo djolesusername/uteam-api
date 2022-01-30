@@ -7,23 +7,25 @@ const router = Router();
 router.get("/", companyControls.getCompanies);
 router.get("/:uid", companyControls.getCompanybyId);
 
-router.post(
+/*router.post(
     "/",
      check("name").notEmpty().withMessage("Name is needed").matches(/^[a-zA-Z0-9 ]+$/i),
     check("logo").isURL(),
    
     
     companyControls.addCompany
-);
+);*/
 
 //Authorization logic needed
 router.put(
     "/:id",
-   check("name").notEmpty().withMessage("Name is needed").matches(/^[a-zA-Z0-9 ]+$/i),
+    check("name")
+        .notEmpty()
+        .withMessage("Name is needed")
+        .matches(/^[a-zA-Z0-9 ]+$/i),
 
     check("logo").isURL(),
-   
-   
+
     companyControls.updateCompany
 );
 

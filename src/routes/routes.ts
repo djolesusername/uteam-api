@@ -2,10 +2,15 @@ import { Router } from "express";
 import userControls from "../controllers/userController";
 import { check, oneOf } from "express-validator";
 import User from "../models/User";
+import passport from "passport";
+//import passportConfig from "../config/passport";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const requireAuth = passport.authenticate("jwt", { session: false });
+const requireSignin = passport.authenticate("local", { session: false });
 
 const router = Router();
 
-router.get("/", userControls.getAllUsers);
+router.get("/", requireAuth, userControls.getAllUsers);
 router.get("/:uid", userControls.getUserbyId);
 
 router.post(
@@ -41,12 +46,10 @@ router.post(
     userControls.postAddUser
 );
 
-
 router.post(
     "/login",
     oneOf([
-        check("username")
-            .matches(/^[a-z][a-zA-Z0-9_\-\#\%\*]+$/),
+        check("username").matches(/^[a-z][a-zA-Z0-9_\-\#\%\*]+$/),
         check("email")
             .notEmpty()
             .isEmail()
@@ -66,6 +69,7 @@ router.post(
     ]),
 
     check("password").notEmpty().isLength({ min: 8 }).trim(),
+    requireSignin,
     userControls.postLogin
 );
 

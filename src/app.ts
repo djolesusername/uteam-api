@@ -11,6 +11,9 @@ import profileRoutes from "./routes/profileRoutes";
 import companyRoutes from "./routes/companyRoutes";
 import userRoutes from "./routes/routes";
 import sequelize from "./config/database";
+import cors from "cors";
+import passport from "passport";
+import passportConfig from "./config/passport";
 
 // load configuration from .env file
 dotenv.config();
@@ -19,7 +22,10 @@ dotenv.config();
 const app = express();
 
 // parse JSON bodies (as sent by API clients)
+app.use(cors());
 app.use(bodyParser.json());
+app.use(passport.initialize());
+passportConfig(passport);
 
 // Define routes
 app.use("/companies", companyRoutes);

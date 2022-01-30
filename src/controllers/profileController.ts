@@ -4,7 +4,7 @@ import { validationResult } from "express-validator";
 import dotenv from "dotenv";
 dotenv.config();
 import { Status } from "../types/types";
-
+/*
 const postAddProfile = async (req: Request, res: Response) => {
     const name: string = req.body.name;
     const profilePhoto: string = req.body.profilePhoto;
@@ -40,7 +40,7 @@ const postAddProfile = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Error adding profile" });
     }
 };
-
+*/
 const getAllProfiles = async (req: Request, res: Response) => {
     try {
         const profiles = await Profile.findAll({ limit: 20 });
@@ -144,7 +144,7 @@ const updateProfile = async (req: Request, res: Response) => {
 const userControls = {
     getAllProfiles,
     getProfilebyId,
-    postAddProfile,
+    // postAddProfile,
     updateProfile,
     deleteProfile,
 };

@@ -2,6 +2,9 @@ import { Router } from "express";
 import profileControls from "../controllers/profileController";
 import { check } from "express-validator";
 import User from "../models/User";
+import passport from "passport";
+
+const requireAuth = passport.authenticate("jwt", { session: false });
 
 const router = Router();
 
@@ -24,6 +27,7 @@ router.post(
 //Authorization logic needed
 router.put(
     "/:id",
+    requireAuth,
     check("name").notEmpty().withMessage("Name is needed"),
     check("profilePhoto").isURL(),
     check("id").custom(async (value) => {
@@ -38,6 +42,6 @@ router.put(
 );
 
 //Authorization logic needed
-router.delete("/:uid", profileControls.deleteProfile);
+router.delete("/:uid", requireAuth, profileControls.deleteProfile);
 
 export default router;

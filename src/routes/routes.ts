@@ -3,15 +3,13 @@ import userControls from "../controllers/userController";
 import { check, oneOf } from "express-validator";
 import User from "../models/User";
 import passport from "passport";
-//import passportConfig from "../config/passport";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const requireAuth = passport.authenticate("jwt", { session: false });
 const requireSignin = passport.authenticate("local", { session: false });
 
 const router = Router();
-
-router.get("/", requireAuth, userControls.getAllUsers);
-router.get("/:uid", userControls.getUserbyId);
+router.get("/", userControls.getAllUsers);
+router.get("/:uid", requireAuth, userControls.getUserbyId);
 
 router.post(
     "/register",
@@ -69,13 +67,13 @@ router.post(
     ]),
 
     check("password").notEmpty().isLength({ min: 8 }).trim(),
-    requireSignin,
     userControls.postLogin
 );
 
 //Authorization logic needed
 router.put(
     "/:uid",
+    requireAuth,
     check("uid").notEmpty().withMessage("Profile id needed"),
     check("username")
         .notEmpty()
@@ -91,6 +89,6 @@ router.put(
 );
 
 //Authorization logic needed
-router.delete("/:uid", userControls.deleteUser);
+router.delete("/:uid", requireAuth, userControls.deleteUser);
 
 export default router;

@@ -1,13 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
 import { validationResult } from "express-validator";
-import jwt from "jsonwebtoken";
+import * as jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { UserRole } from "../types/types";
-import passport from "passport";
+import { UserRole, Status } from "../types/types";
 import User from "../models/User";
 import Profile from "../models/Profile";
-
 dotenv.config();
 
 const postAddUser = async (req: Request, res: Response) => {
@@ -23,6 +21,8 @@ const postAddUser = async (req: Request, res: Response) => {
     const password =
         req.body.password && (await bcrypt.hash(req.body.password, 12));
     const role = UserRole.COMPANYADMIN;
+    const name: string = req.body.name;
+    const profilePhoto: string = req.body.profilePhoto;
     try {
         await User.create({
             username,
@@ -32,6 +32,14 @@ const postAddUser = async (req: Request, res: Response) => {
         }).then((result) => {
             console.log("Created new User");
             console.log(result.id);
+
+            Profile.create({
+                name: name,
+                profilePhoto: profilePhoto,
+                status: Status.PENDING,
+                user: result.id,
+                company: null,
+            });
         });
     } catch (err) {
         console.log(err);
@@ -158,7 +166,7 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const postLogin = async (req: Request, res: Response) => {
+const postLogin = async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         console.log(errors);
@@ -201,9 +209,13 @@ const postLogin = async (req: Request, res: Response) => {
         }
 
         // create a token
-        const token = jwt.sign({ username: username }, process.env.JWT_SECRET, {
-            expiresIn: "8h",
-        });
+        const token = jwt.sign(
+            { username: user.username },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "24h",
+            }
+        );
 
         return res.status(200).json({ message: "OK", token: token });
     } catch (err) {

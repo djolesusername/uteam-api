@@ -20,7 +20,7 @@ const localLogin = new LocalStrategy(
         const generateHash = function (password: string) {
             return bcrypt.hashSync(password, bcrypt.genSaltSync(12));
         };
-
+        console.log("locallogin");
         User.findOne({
             where: {
                 email: email,
@@ -31,7 +31,6 @@ const localLogin = new LocalStrategy(
                     return done(null, false, {
                         message: "email already taken",
                     });
-                    console.log("mail already taken");
                 } else {
                     const pass = generateHash(password);
 
@@ -63,21 +62,21 @@ const localLogin = new LocalStrategy(
 
 // Setup options for JWT Strategy
 const jwtOptions = {
-    jwtFromRequest: ExtractJwt.fromHeader("authorization"),
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: process.env.JWT_SECRET,
 };
 
 // Create JWT strategy
-const jwtLogin = new JwtStrategy(jwtOptions, function (payload, done) {
+const jwtStrat = new JwtStrategy(jwtOptions, function (payload, done) {
+    console.log(payload);
     // See if the user ID in the payload exists in our database
     // If it does, call 'done' with that other
     // otherwise, call done without a user object
     const user = User.findOne({
         where: {
-            email: payload.email,
+            username: payload.username,
         },
     });
-
     if (user) {
         done(null, user);
     } else {
@@ -90,7 +89,7 @@ const jwtLogin = new JwtStrategy(jwtOptions, function (payload, done) {
 const passportConfig = (passport: {
     use: (arg0: JwtStrategy | passportLocal.Strategy) => void;
 }) => {
-    passport.use(jwtLogin);
+    passport.use(jwtStrat);
     passport.use(localLogin);
 };
 export default passportConfig;

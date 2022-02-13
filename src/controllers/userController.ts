@@ -5,7 +5,11 @@ import * as jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { UserRole, Status } from "../types/types";
 import User from "../models/User";
+import Company from "../models/companies";
 import Profile from "../models/Profile";
+import slugify from "../util/slug";
+import { Op } from "sequelize";
+
 dotenv.config();
 
 const postAddUser = async (req: Request, res: Response) => {
@@ -22,7 +26,24 @@ const postAddUser = async (req: Request, res: Response) => {
         req.body.password && (await bcrypt.hash(req.body.password, 12));
     const role = UserRole.COMPANYADMIN;
     const name: string = req.body.name;
-    const profilePhoto: string = req.body.profilePhoto;
+    const profilePhoto: string =
+        req.body.profilePhoto ||
+        "https://mom.rs/wp-content/uploads/2016/10/test-logo.png";
+    const companyName: string = req.body.companyName || `${username}'s company`;
+    const logo: string =
+        req.body.logo ||
+        "https://mom.rs/wp-content/uploads/2016/10/test-logo.png";
+    const slug = slugify(companyName);
+
+    if (name === username) {
+        return res
+            .status(422)
+            .json({
+                message: "Validation error",
+                errors: ["name cannot be same as username"],
+            });
+    }
+
     try {
         await User.create({
             username,
@@ -40,6 +61,13 @@ const postAddUser = async (req: Request, res: Response) => {
                 user: result.id,
                 company: null,
             });
+
+            Company.create({
+                name: companyName,
+                logo: logo,
+                slug: slug,
+                companyOwner: result.id,
+            });
         });
     } catch (err) {
         console.log(err);
@@ -49,6 +77,7 @@ const postAddUser = async (req: Request, res: Response) => {
 };
 
 const getAllUsers = async (req: Request, res: Response) => {
+    console.log(req.headers.authorization?.split(" ")[1]);
     const users = await User.findAll({ limit: 20 });
     if (users) {
         res.status(200).json({ users });
@@ -73,6 +102,10 @@ const deleteUser = async (req: Request, res: Response) => {
     //We are checking if user has a profile. If so, profile is being deleted and then the user
 
     const id = Number(req.params.uid);
+    const passportData = req.user as User;
+    if (passportData.id !== id) {
+        return res.status(403).json({ message: "Not authorized" });
+    }
 
     try {
         const profile = await Profile.findOne({
@@ -117,6 +150,13 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     const id = Number(req.params.uid) || 0;
+    //in order to be able to edit user it needs to be its own profile
+
+    const passportData = req.user as User;
+    if (passportData.id !== id) {
+        return res.status(403).json({ message: "Not authorized" });
+    }
+
     const password =
         req.body.password && (await bcrypt.hash(req.body.password, 12));
     const email = req.body.email;
@@ -174,33 +214,26 @@ const postLogin = async (req: Request, res: Response, next: NextFunction) => {
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });
     }
-    const { username, password, email } = req.body;
+    const username = req.body.username;
     let user;
 
     try {
         if (username) {
             user = await User.findOne({
-                where: { username: username },
+                where: {
+                    [Op.or]: [{ username: username }, { email: username }],
+                },
             });
-        } else if (email) {
+        } /*else if (email) {
             user = await User.findOne({
                 where: { email: email },
             });
-        }
+        }*/
 
         if (!user) {
             return res
                 .status(403)
-                .json({ message: "user not found", user: username || email });
-        }
-
-        // check if password matches
-        const result = await bcrypt.compare(password, user.password);
-        if (!result) {
-            return res.status(403).json({
-                message: "Wrong password",
-                username: username || email,
-            });
+                .json({ message: "user not found", user: username });
         }
 
         // if process.env.JWT_SECRET is not defined throw an 500 error
@@ -213,7 +246,7 @@ const postLogin = async (req: Request, res: Response, next: NextFunction) => {
             { username: user.username },
             process.env.JWT_SECRET,
             {
-                expiresIn: "24h",
+                expiresIn: "16h",
             }
         );
 

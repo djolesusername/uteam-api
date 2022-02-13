@@ -4,6 +4,7 @@ import { validationResult } from "express-validator";
 import dotenv from "dotenv";
 dotenv.config();
 import { Status } from "../types/types";
+import User from "../models/User";
 /*
 const postAddProfile = async (req: Request, res: Response) => {
     const name: string = req.body.name;
@@ -75,7 +76,13 @@ const getProfilebyId = async (req: Request, res: Response) => {
 };
 
 const deleteProfile = async (req: Request, res: Response) => {
+    const passportData = req.user as User;
     const id = Number(req.params.uid);
+
+    if (passportData.id !== id) {
+        return res.status(403).json({ message: "Not authorized" });
+    }
+
     try {
         const profile = await Profile.findOne({
             where: { user: id },
@@ -103,6 +110,11 @@ const updateProfile = async (req: Request, res: Response) => {
             .json({ message: "Validation error", errors: errors.array() });
     }
     const id = Number(req.params.id);
+    const passportData = req.user as User;
+    if (passportData.id !== id) {
+        return res.status(403).json({ message: "Not authorized" });
+    }
+
     //Express validator check user exists now confirming that profile exsists
     const profile = await Profile.findOne({
         where: { user: id },

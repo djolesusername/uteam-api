@@ -52,7 +52,7 @@ Company.init(
             allowNull: false,
         },
         companyOwner: {
-            type: new DataTypes.INTEGER(),
+            type: new DataTypes.INTEGER().UNSIGNED,
             allowNull: false,
             references: {
                 model: "users",

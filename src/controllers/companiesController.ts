@@ -3,6 +3,8 @@ import { validationResult } from "express-validator";
 import dotenv from "dotenv";
 import slugify from "../util/slug";
 import Company from "../models/companies";
+import User from "../models/User";
+import { userInfo } from "os";
 
 dotenv.config();
 /*
@@ -55,11 +57,17 @@ const getCompanybyId = async (req: Request, res: Response) => {
 
 const deleteCompany = async (req: Request, res: Response) => {
     const id = Number(req.params.uid);
+    const passportData = req.user as User;
 
     try {
         const company = await Company.findOne({
             where: { id: id },
         });
+        if (company && passportData.id !== company.companyOwner) {
+            return res.status(403).json({
+                message: "Not authorized",
+            });
+        }
 
         if (company) {
             await Company.destroy({
@@ -92,6 +100,14 @@ const updateCompany = async (req: Request, res: Response) => {
     const company = await Company.findOne({
         where: { id: id },
     });
+
+    const passportData = req.user as User;
+
+    if (company && passportData.id !== company.companyOwner) {
+        return res.status(403).json({
+            message: "Not authorized",
+        });
+    }
 
     const name = req.body.name || company?.name;
     const logo = req.body.logo || company?.logo;

@@ -25,13 +25,13 @@ router.get("/:uid", companyControls.getCompanybyId);
 //Authorization logic needed
 router.put(
     "/:id",
-    requireAuth,
     check("name")
         .notEmpty()
         .withMessage("Name is needed")
         .matches(/^[a-zA-Z0-9 ]+$/i),
 
     check("logo").isURL(),
+    requireAuth,
 
     companyControls.updateCompany
 );

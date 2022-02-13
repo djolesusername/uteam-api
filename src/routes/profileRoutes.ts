@@ -27,7 +27,6 @@ router.post(
 //Authorization logic needed
 router.put(
     "/:id",
-    requireAuth,
     check("name").notEmpty().withMessage("Name is needed"),
     check("profilePhoto").isURL(),
     check("id").custom(async (value) => {
@@ -38,6 +37,7 @@ router.put(
             );
         }
     }),
+    requireAuth,
     profileControls.updateProfile
 );
 

@@ -6,57 +6,66 @@ import passport from "passport";
 dotenv.config();
 //import Company from "../models/companies";
 import bcrypt from "bcryptjs";
-import { UserRole } from "../types/types";
+import { UserRole, SignInOptions } from "../types/types";
+import { JwtPayload } from "jsonwebtoken";
+import { NextFunction } from "express";
 
 const LocalStrategy = passportLocal.Strategy;
 
 const localLogin = new LocalStrategy(
     {
-        usernameField: "email",
-        passwordField: "password",
+        //  usernameField: "email",
+        //  passwordField: "password",
         passReqToCallback: true,
     },
-    function (req, email, password, done) {
-        const generateHash = function (password: string) {
-            return bcrypt.hashSync(password, bcrypt.genSaltSync(12));
-        };
-        console.log("locallogin");
-        User.findOne({
-            where: {
-                email: email,
-            },
-        })
-            .then(function (user) {
-                if (user) {
-                    return done(null, false, {
-                        message: "email already taken",
-                    });
-                } else {
-                    const pass = generateHash(password);
+    async function (req, username, password, done) {
+        const providedCredential =
+            username.indexOf("@") > -1
+                ? SignInOptions.EMAIL
+                : SignInOptions.USERNAME;
 
-                    const data = {
-                        email: email,
-                        password: pass,
-                        username: req.body.username,
-                        public_key: "0",
-                        last_login: null,
-                        role: UserRole.COMPANYADMIN,
-                    };
-
-                    User.create(data).then(function (newUser: User) {
-                        if (!newUser) {
-                            return done(null, false);
-                        }
-
-                        if (newUser) {
-                            return done(null, newUser, { message: "tappost" });
-                        }
-                    });
-                }
-            })
-            .catch(function (err) {
-                console.log(err);
+        //Passport doesn't accept username or email so we have to figure out what was sent
+        //Username doesn't have special characters allowed which means we can use this check to distinguish between email and username
+        let user: User | null;
+        if (providedCredential === "username") {
+            user = await User.findOne({
+                where: {
+                    username,
+                },
             });
+            if (user) {
+                const result = await bcrypt.compare(password, user.password);
+                if (!result) {
+                    console.log("password mismatch");
+                    return done(null, false);
+                } else {
+                    return done(null, user);
+                }
+            } else {
+                console.log("user not found");
+                return done(null, false);
+            }
+        } else if (providedCredential === "email") {
+            user = await User.findOne({
+                where: {
+                    email: username,
+                },
+            });
+            if (user) {
+                const result = await bcrypt.compare(password, user.password);
+                if (!result) {
+                    console.log("password mismatch");
+                    return done(null, false);
+                } else {
+                    return done(null, user);
+                }
+            } else {
+                console.log("user not found");
+                return done(null, false);
+            }
+        }
+
+        // check if password matches
     }
 );
 
@@ -64,24 +73,41 @@ const localLogin = new LocalStrategy(
 const jwtOptions = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: process.env.JWT_SECRET,
+    // passReqToCallback: true,
 };
 
 // Create JWT strategy
-const jwtStrat = new JwtStrategy(jwtOptions, function (payload, done) {
-    console.log(payload);
+const jwtStrat = new JwtStrategy(jwtOptions, async function (
+    payload: JwtPayload,
+    done
+) {
     // See if the user ID in the payload exists in our database
     // If it does, call 'done' with that other
     // otherwise, call done without a user object
-    const user = User.findOne({
-        where: {
-            username: payload.username,
-        },
-    });
-    if (user) {
-        done(null, user);
-    } else {
-        done(null, false);
+    //const { username, password, email } = payload.body;
+    const { username, exp } = payload;
+    //checking if token already expired and if we have a valid username
+    try {
+        let user;
+
+        if (exp && exp - Date.now() / 1000 > 0 && username) {
+            user = await User.findOne({
+                where: { username: username },
+            });
+            //Not checking if he is THE company admin of the COMPANY in question
+            if (user && user.role === UserRole.COMPANYADMIN) {
+                console.log("positive");
+                return done(null, user);
+            } else {
+                console.log(user);
+                return done(null, false);
+            }
+        }
+    } catch (err) {
+        return done(null, false);
+        console.log("line96");
     }
+    return done(null, false);
 });
 
 // Tell passport to use this strategy

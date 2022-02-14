@@ -2,13 +2,12 @@ import User from "../models/User";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import dotenv from "dotenv";
 import passportLocal from "passport-local";
-import passport from "passport";
+//import passport from "passport";
 dotenv.config();
 //import Company from "../models/companies";
 import bcrypt from "bcryptjs";
 import { UserRole, SignInOptions } from "../types/types";
 import { JwtPayload } from "jsonwebtoken";
-import { NextFunction } from "express";
 
 const LocalStrategy = passportLocal.Strategy;
 
@@ -96,7 +95,6 @@ const jwtStrat = new JwtStrategy(jwtOptions, async function (
             });
             //Not checking if he is THE company admin of the COMPANY in question
             if (user && user.role === UserRole.COMPANYADMIN) {
-                console.log("positive");
                 return done(null, user);
             } else {
                 console.log(user);

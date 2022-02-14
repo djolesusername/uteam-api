@@ -9,6 +9,7 @@ import Company from "../models/companies";
 import Profile from "../models/Profile";
 import slugify from "../util/slug";
 import { Op } from "sequelize";
+import sequelize from "../config/database";
 
 dotenv.config();
 
@@ -36,41 +37,52 @@ const postAddUser = async (req: Request, res: Response) => {
     const slug = slugify(companyName);
 
     if (name === username) {
-        return res
-            .status(422)
-            .json({
-                message: "Validation error",
-                errors: ["name cannot be same as username"],
-            });
+        return res.status(422).json({
+            message: "Validation error",
+            errors: ["name cannot be same as username"],
+        });
     }
 
     try {
-        await User.create({
-            username,
-            password,
-            email,
-            role,
-        }).then((result) => {
-            console.log("Created new User");
-            console.log(result.id);
+        await sequelize.transaction(async (t) => {
+            await User.create(
+                {
+                    username,
+                    password,
+                    email,
+                    role,
+                },
+                { transaction: t }
+            ).then(async (result) => {
+                console.log("Created new User");
+                console.log(result.id);
 
-            Profile.create({
-                name: name,
-                profilePhoto: profilePhoto,
-                status: Status.PENDING,
-                user: result.id,
-                company: null,
-            });
+                await Profile.create(
+                    {
+                        name: name,
+                        profilePhoto: profilePhoto,
+                        status: Status.PENDING,
+                        user: result.id,
+                        company: null,
+                    },
+                    { transaction: t }
+                );
 
-            Company.create({
-                name: companyName,
-                logo: logo,
-                slug: slug,
-                companyOwner: result.id,
+                await Company.create(
+                    {
+                        name: companyName,
+                        logo: logo,
+                        slug: slug,
+                        companyOwner: result.id,
+                    },
+                    { transaction: t }
+                );
             });
         });
     } catch (err) {
         console.log(err);
+
+        return res.status(501);
     }
 
     res.status(201).json("User created");
@@ -206,7 +218,7 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const postLogin = async (req: Request, res: Response, next: NextFunction) => {
+const postLogin = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         console.log(errors);

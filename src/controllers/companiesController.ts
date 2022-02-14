@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import slugify from "../util/slug";
 import Company from "../models/companies";
 import User from "../models/User";
-import { userInfo } from "os";
 
 dotenv.config();
 /*

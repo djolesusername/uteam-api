@@ -24,7 +24,6 @@ router.post(
     profileControls.postAddProfile
 );
 */
-//Authorization logic needed
 router.put(
     "/:id",
     check("name").notEmpty().withMessage("Name is needed"),
@@ -41,7 +40,6 @@ router.put(
     profileControls.updateProfile
 );
 
-//Authorization logic needed
 router.delete("/:uid", requireAuth, profileControls.deleteProfile);
 
 export default router;

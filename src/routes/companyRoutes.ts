@@ -10,17 +10,16 @@ const router = Router();
 router.get("/", companyControls.getCompanies);
 router.get("/:uid", companyControls.getCompanybyId);
 
-/*router.post(
+router.post(
     "/",
     check("name")
         .notEmpty()
         .withMessage("Name is needed")
         .matches(/^[a-zA-Z0-9 ]+$/i),
     check("logo").isURL(),
-
+    requireAuth,
     companyControls.addCompany
 );
-*/
 
 //Authorization logic needed
 router.put(

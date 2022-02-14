@@ -6,7 +6,7 @@ import Company from "../models/companies";
 import User from "../models/User";
 
 dotenv.config();
-/*
+
 const addCompany = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -14,25 +14,27 @@ const addCompany = async (req: Request, res: Response) => {
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });
     }
-   
+    const passportData = req.user as User;
+    const companyOwner = passportData.id;
+
     const name: string = req.body.name;
-    const logo: string = req.body.profilePhoto || "https://mom.rs" ;
-    const slug = slugify(name)
+    const logo: string = req.body.profilePhoto || "https://mom.rs";
+    const slug = slugify(name);
     try {
         await Company.create({
             name,
             logo,
-            slug
+            slug,
+            companyOwner,
         }).then((result) => {
             console.log("Created new company", result);
-            res.status(201).json({"company": result});
-
+            res.status(201).json({ company: result });
         });
     } catch (err) {
         console.log(err);
     }
 };
-*/
+
 const getCompanies = async (req: Request, res: Response) => {
     const companies = await Company.findAll({ limit: 20 });
     if (companies) {
@@ -144,5 +146,5 @@ export default {
     getCompanybyId,
     deleteCompany,
     updateCompany,
-    //addCompany,
+    addCompany,
 };

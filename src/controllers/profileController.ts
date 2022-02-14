@@ -75,7 +75,7 @@ const updateProfile = async (req: Request, res: Response) => {
     }
     const id = Number(req.params.id);
     const passportData = req.user as User;
-    console.log(passportData);
+    console.log(passportData.username);
     if (passportData.id !== id) {
         return res.status(403).json({ message: "Not authorized" });
     }
@@ -86,6 +86,12 @@ const updateProfile = async (req: Request, res: Response) => {
     });
 
     const name = req.body.name;
+    if (passportData.username === name) {
+        return res
+            .status(422)
+            .json({ message: "Name and username cannot be the same" });
+    }
+
     const profilePhoto = req.body.profilePhoto;
     const company = req.body.company || profile?.company;
     try {

@@ -5,43 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { Status } from "../types/types";
 import User from "../models/User";
-/*
-const postAddProfile = async (req: Request, res: Response) => {
-    const name: string = req.body.name;
-    const profilePhoto: string = req.body.profilePhoto;
-    const status: Status = Status.PENDING;
-    const userid = parseFloat(req.params.id);
-    const company = req.body.company || null;
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res
-            .status(422)
-            .json({ message: "Validation error", errors: errors.array() });
-    }
-    try {
-        const profile = await Profile.findOne({
-            where: { user: userid },
-        });
-
-        if (profile) {
-            res.status(400).json({ message: "Profile already exsists" });
-        }
-
-        await Profile.create({
-            name: name,
-            profilePhoto: profilePhoto,
-            status: status,
-            user: userid,
-            company,
-        });
-
-        res.status(200).json({ message: "Profile created" });
-    } catch (err) {
-        res.status(500).json({ message: "Error adding profile" });
-    }
-};
-*/
 const getAllProfiles = async (req: Request, res: Response) => {
     try {
         const profiles = await Profile.findAll({ limit: 20 });
@@ -111,6 +75,7 @@ const updateProfile = async (req: Request, res: Response) => {
     }
     const id = Number(req.params.id);
     const passportData = req.user as User;
+    console.log(passportData);
     if (passportData.id !== id) {
         return res.status(403).json({ message: "Not authorized" });
     }

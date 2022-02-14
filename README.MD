@@ -34,7 +34,7 @@ Clone project from github, install dependencies with `npm install` and run the s
 ## requests response format
 
 -   `POST /register` (email -> unique, password(min 8), username)
--   `POST /login` (email, password) returns email and web token
+-   `POST /login` (username (provide username or email), password) returns jwt
 
 **/users**
 

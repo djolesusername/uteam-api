@@ -21,15 +21,14 @@ const addCompany = async (req: Request, res: Response) => {
     const logo: string = req.body.profilePhoto || "https://mom.rs";
     const slug = slugify(name);
     try {
-        await Company.create({
+        const newCompany = await Company.create({
             name,
             logo,
             slug,
             companyOwner,
-        }).then((result) => {
-            console.log("Created new company", result);
-            res.status(201).json({ company: result });
         });
+
+        res.status(201).json({ company: newCompany });
     } catch (err) {
         res.status(500).json({ message: "error creating Company" });
     }

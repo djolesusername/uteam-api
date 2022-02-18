@@ -35,13 +35,11 @@ const localLogin = new LocalStrategy(
             if (user) {
                 const result = await bcrypt.compare(password, user.password);
                 if (!result) {
-                    console.log("password mismatch");
                     return done(null, false);
                 } else {
                     return done(null, user);
                 }
             } else {
-                console.log("user not found");
                 return done(null, false);
             }
         } else if (providedCredential === "email") {
@@ -53,13 +51,11 @@ const localLogin = new LocalStrategy(
             if (user) {
                 const result = await bcrypt.compare(password, user.password);
                 if (!result) {
-                    console.log("password mismatch");
                     return done(null, false);
                 } else {
                     return done(null, user);
                 }
             } else {
-                console.log("user not found");
                 return done(null, false);
             }
         }
@@ -97,13 +93,11 @@ const jwtStrat = new JwtStrategy(jwtOptions, async function (
             if (user && user.role === UserRole.COMPANYADMIN) {
                 return done(null, user);
             } else {
-                console.log(user);
                 return done(null, false);
             }
         }
     } catch (err) {
         return done(null, false);
-        console.log("line96");
     }
     return done(null, false);
 });

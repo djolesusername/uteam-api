@@ -16,7 +16,6 @@ const getAllProfiles = async (req: Request, res: Response) => {
 
         res.status(200).json({ profiles: profiles });
     } catch (err) {
-        console.log(err);
         res.status(500).json({ message: "error loading profiles" });
     }
 };
@@ -75,7 +74,6 @@ const updateProfile = async (req: Request, res: Response) => {
     }
     const id = Number(req.params.id);
     const passportData = req.user as User;
-    console.log(passportData.username);
     if (passportData.id !== id) {
         return res.status(403).json({ message: "Not authorized" });
     }

@@ -31,7 +31,7 @@ const addCompany = async (req: Request, res: Response) => {
             res.status(201).json({ company: result });
         });
     } catch (err) {
-        console.log(err);
+        res.status(500).json({ message: "error creating Company" });
     }
 };
 
@@ -82,8 +82,6 @@ const deleteCompany = async (req: Request, res: Response) => {
             res.status(400).json({ message: "Company doesn't exist" });
         }
     } catch (err) {
-        console.log(err);
-
         res.status(500).json({ message: "error deleting company" });
     }
 };
@@ -91,7 +89,6 @@ const deleteCompany = async (req: Request, res: Response) => {
 const updateCompany = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        console.log(errors);
         return res
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });

@@ -47,7 +47,6 @@ app.use(function (
     next: NextFunction
 ) {
     // error handling logic
-    console.log(err);
     res.status(500).send("Something broke!");
 });
 

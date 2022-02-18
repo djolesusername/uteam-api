@@ -16,7 +16,6 @@ dotenv.config();
 const postAddUser = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        console.log(errors);
         return res
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });
@@ -54,9 +53,6 @@ const postAddUser = async (req: Request, res: Response) => {
                 },
                 { transaction: t }
             ).then(async (result) => {
-                console.log("Created new User");
-                console.log(result.id);
-
                 await Profile.create(
                     {
                         name: name,
@@ -80,8 +76,6 @@ const postAddUser = async (req: Request, res: Response) => {
             });
         });
     } catch (err) {
-        console.log(err);
-
         return res.status(501);
     }
 
@@ -89,7 +83,6 @@ const postAddUser = async (req: Request, res: Response) => {
 };
 
 const getAllUsers = async (req: Request, res: Response) => {
-    console.log(req.headers.authorization?.split(" ")[1]);
     const users = await User.findAll({ limit: 20 });
     if (users) {
         res.status(200).json({ users });
@@ -146,8 +139,6 @@ const deleteUser = async (req: Request, res: Response) => {
             res.status(400).json({ message: "User doesn't exist" });
         }
     } catch (err) {
-        console.log(err);
-
         res.status(500).json({ message: "error deleting user" });
     }
 };
@@ -155,7 +146,6 @@ const deleteUser = async (req: Request, res: Response) => {
 const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        console.log(errors);
         return res
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });
@@ -221,7 +211,6 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
 const postLogin = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        console.log(errors);
         return res
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });

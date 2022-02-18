@@ -44,7 +44,7 @@ const postAddUser = async (req: Request, res: Response) => {
 
     try {
         await sequelize.transaction(async (t) => {
-            await User.create(
+            const newUser = await User.create(
                 {
                     username,
                     password,
@@ -52,28 +52,28 @@ const postAddUser = async (req: Request, res: Response) => {
                     role,
                 },
                 { transaction: t }
-            ).then(async (result) => {
-                await Profile.create(
-                    {
-                        name: name,
-                        profilePhoto: profilePhoto,
-                        status: Status.PENDING,
-                        user: result.id,
-                        company: null,
-                    },
-                    { transaction: t }
-                );
+            );
+            console.log(newUser.id);
+            await Profile.create(
+                {
+                    name: name,
+                    profilePhoto: profilePhoto,
+                    status: Status.PENDING,
+                    user: newUser.id,
+                    company: null,
+                },
+                { transaction: t }
+            );
 
-                await Company.create(
-                    {
-                        name: companyName,
-                        logo: logo,
-                        slug: slug,
-                        companyOwner: result.id,
-                    },
-                    { transaction: t }
-                );
-            });
+            await Company.create(
+                {
+                    name: companyName,
+                    logo: logo,
+                    slug: slug,
+                    companyOwner: newUser.id,
+                },
+                { transaction: t }
+            );
         });
     } catch (err) {
         return res.status(501);
@@ -225,11 +225,7 @@ const postLogin = async (req: Request, res: Response) => {
                     [Op.or]: [{ username: username }, { email: username }],
                 },
             });
-        } /*else if (email) {
-            user = await User.findOne({
-                where: { email: email },
-            });
-        }*/
+        }
 
         if (!user) {
             return res

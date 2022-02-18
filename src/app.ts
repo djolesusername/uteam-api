@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 import bodyParser from "body-parser";
 
 import profileRoutes from "./routes/profileRoutes";
+import companyRoutes from "./routes/companyRoutes";
 import userRoutes from "./routes/routes";
 import sequelize from "./config/database";
 
@@ -21,6 +22,7 @@ const app = express();
 app.use(bodyParser.json());
 
 // Define routes
+app.use("/companies", companyRoutes);
 app.use("/profiles", profileRoutes);
 app.use("/", userRoutes);
 

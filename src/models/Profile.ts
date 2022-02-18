@@ -8,6 +8,7 @@ interface ProfileAttributes {
     profilePhoto: string;
     status: Status;
     user: number;
+    company: number | null;
 }
 
 // Some attributes are optional in `User.build` and `User.create` calls
@@ -21,6 +22,8 @@ class Profile extends Model<ProfileAttributes> implements ProfileAttributes {
     // timestamps!
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
+    public company!: number | null;
+    // public readonly company = 0;
 }
 
 Profile.init(
@@ -44,6 +47,14 @@ Profile.init(
             references: {
                 // 1:1
                 model: "users",
+                key: "id",
+            },
+        },
+        company: {
+            type: DataTypes.INTEGER.UNSIGNED,
+            allowNull: true,
+            references: {
+                model: "companies",
                 key: "id",
             },
         },

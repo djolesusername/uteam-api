@@ -2,7 +2,7 @@
 
 Nodejs Rest API to register and login users.
 
-The project is implemented as part the InterShip in Quantox Techologies.
+The project is implemented as part the Internship in Quantox Techologies.
 
 ### env file
 
@@ -33,15 +33,15 @@ Clone project from github, install dependencies with `npm install` and run the s
 
 ## requests response format
 
+- `POST /register` (email -> unique, password(min 8), username)
+- `POST /login` (email, password) returns email and web token
+
 **/users**
 
 - `GET /` all users returns json object with requested information
 - `GET /{userId}` get user by ID returns json object with requested information
 - `PUT /{userId}`
 - `DELETE /{userId}` -> Checks for user profile and delets it before it removes a user
-
-- `POST /register` (email -> unique, password(min 8), username)
-- `POST /login` (email, password) returns email and web token
 
 **/profiles**
 
@@ -50,6 +50,13 @@ Clone project from github, install dependencies with `npm install` and run the s
 - `PUT /{profileId}`
 - `DELETE /{profileId}`
 
+**/companies**
+
+- `GET /` all companies returns json object with requested information
+- `GET /{companyId}` get company by ID returns json object with requested information
+- `PUT /{companyId}`
+- `DELETE /{companyId}`
+
 **to do**
 
 Current user logic is able to encryprt passwords with bcryptjs and check if provided password matches saved in the db. Current logic doesn't provide:
@@ -57,6 +64,7 @@ Current user logic is able to encryprt passwords with bcryptjs and check if prov
 - [ ] proper password reset logic (with email confirmation or similar security guard)
 - [ ] crsf protection
 - [ ] authorization logic
+- [ ] userRole logic while editing user
 
 ## Changelog
 

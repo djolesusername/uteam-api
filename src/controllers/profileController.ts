@@ -10,6 +10,8 @@ const postAddProfile = async (req: Request, res: Response) => {
     const profilePhoto: string = req.body.profilePhoto;
     const status: Status = Status.PENDING;
     const userid = parseFloat(req.params.id);
+    const company = req.body.company || null;
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res
@@ -30,6 +32,7 @@ const postAddProfile = async (req: Request, res: Response) => {
             profilePhoto: profilePhoto,
             status: status,
             user: userid,
+            company,
         });
 
         res.status(200).json({ message: "Profile created" });
@@ -48,6 +51,7 @@ const getAllProfiles = async (req: Request, res: Response) => {
 
         res.status(200).json({ profiles: profiles });
     } catch (err) {
+        console.log(err);
         res.status(500).json({ message: "error loading profiles" });
     }
 };
@@ -106,6 +110,7 @@ const updateProfile = async (req: Request, res: Response) => {
 
     const name = req.body.name;
     const profilePhoto = req.body.profilePhoto;
+    const company = req.body.company || profile?.company;
     try {
         if (profile) {
             await Profile.update(
@@ -114,6 +119,7 @@ const updateProfile = async (req: Request, res: Response) => {
                     profilePhoto: profilePhoto,
                     status: Status.PENDING,
                     user: id,
+                    company,
                 },
                 {
                     where: {
@@ -125,6 +131,7 @@ const updateProfile = async (req: Request, res: Response) => {
                 message: `user ${id} updated`,
                 name,
                 profilePhoto,
+                company,
             });
         } else {
             res.status(404).json({ message: `Profile not found` });

@@ -18,7 +18,9 @@ const addCompany = async (req: Request, res: Response) => {
     const companyOwner = passportData.id;
 
     const name: string = req.body.name;
-    const logo: string = req.body.profilePhoto || "https://mom.rs";
+    const logo: string =
+        req.body.profilePhoto ||
+        "https://mom.rs/wp-content/uploads/2016/10/test-logo.png";
     const slug = slugify(name);
     try {
         const newCompany = await Company.create({

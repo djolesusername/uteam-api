@@ -52,6 +52,7 @@ User.init(
             allowNull: false,
         },
     },
+
     {
         tableName: "users",
         sequelize, // passing the `sequelize` instance is required

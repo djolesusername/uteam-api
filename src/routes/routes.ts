@@ -2,9 +2,12 @@ import { Router } from "express";
 import userControls from "../controllers/userController";
 import { check, oneOf } from "express-validator";
 import User from "../models/User";
+import passport from "passport";
+
+const requireAuthorization = passport.authenticate("jwt", { session: false });
+const requireSignin = passport.authenticate("local", { session: false });
 
 const router = Router();
-
 router.get("/", userControls.getAllUsers);
 router.get("/:uid", userControls.getUserbyId);
 
@@ -38,16 +41,21 @@ router.post(
         "password",
         "Valid password should have at least 8 characters"
     ).isLength({ min: 8 }),
+    check("name").notEmpty().withMessage("Name is needed"),
+    check("profilePhoto").optional().isURL(),
+    check("companyName")
+        .optional()
+
+        .matches(/^[a-zA-Z0-9 ]+$/i),
+    check("logo").optional().isURL(),
     userControls.postAddUser
 );
-
 
 router.post(
     "/login",
     oneOf([
+        check("username").matches(/^[a-z][a-zA-Z0-9_\-\#\%\*]+$/),
         check("username")
-            .matches(/^[a-z][a-zA-Z0-9_\-\#\%\*]+$/),
-        check("email")
             .notEmpty()
             .isEmail()
             .withMessage("Please enter a valid email")
@@ -66,6 +74,8 @@ router.post(
     ]),
 
     check("password").notEmpty().isLength({ min: 8 }).trim(),
+    requireSignin,
+
     userControls.postLogin
 );
 
@@ -83,10 +93,12 @@ router.put(
         .isEmail()
         .withMessage("Please enter a valid email")
         .normalizeEmail(),
+    requireAuthorization,
+
     userControls.updateUser
 );
 
 //Authorization logic needed
-router.delete("/:uid", userControls.deleteUser);
+router.delete("/:uid", requireAuthorization, userControls.deleteUser);
 
 export default router;

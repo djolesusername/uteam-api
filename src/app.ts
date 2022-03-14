@@ -11,6 +11,8 @@ import profileRoutes from "./routes/profileRoutes";
 import companyRoutes from "./routes/companyRoutes";
 import userRoutes from "./routes/routes";
 import sequelize from "./config/database";
+import passport from "passport";
+import passportConfig from "./config/passport";
 
 // load configuration from .env file
 dotenv.config();
@@ -20,6 +22,17 @@ const app = express();
 
 // parse JSON bodies (as sent by API clients)
 app.use(bodyParser.json());
+app.use(passport.initialize());
+passportConfig(passport);
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+    next();
+});
 
 // Define routes
 app.use("/companies", companyRoutes);
@@ -34,7 +47,6 @@ app.use(function (
     next: NextFunction
 ) {
     // error handling logic
-    console.log(err);
     res.status(500).send("Something broke!");
 });
 

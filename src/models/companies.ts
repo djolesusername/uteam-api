@@ -1,12 +1,14 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
 import Profile from "./Profile";
+import User from "./User";
 
 interface CompanyAttributes {
     name: string;
     logo: string;
     slug: string;
     id: number;
+    companyOwner: number;
 }
 
 // Some attributes are optional in `User.build` and `User.create` calls
@@ -25,6 +27,7 @@ class Company
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
     public slug!: string;
+    public companyOwner!: number;
 }
 
 Company.init(
@@ -48,6 +51,14 @@ Company.init(
             type: new DataTypes.STRING(128),
             allowNull: false,
         },
+        companyOwner: {
+            type: new DataTypes.INTEGER().UNSIGNED,
+            allowNull: false,
+            references: {
+                model: "users",
+                key: "id",
+            },
+        },
     },
 
     {
@@ -58,4 +69,6 @@ Company.init(
 Company.hasMany(Profile, { foreignKey: "company" });
 Profile.belongsTo(Company);
 
+User.hasMany(Company, { foreignKey: "companyOwner" });
+Company.belongsTo(User);
 export default Company;

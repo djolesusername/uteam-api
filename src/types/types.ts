@@ -8,3 +8,8 @@ export enum UserRole {
     COMPANYADMIN = "company-admin",
     SUPERADMING = "superadmin",
 }
+
+export enum SignInOptions {
+    EMAIL = "email",
+    USERNAME = "username",
+}

@@ -4,42 +4,7 @@ import { validationResult } from "express-validator";
 import dotenv from "dotenv";
 dotenv.config();
 import { Status } from "../types/types";
-
-const postAddProfile = async (req: Request, res: Response) => {
-    const name: string = req.body.name;
-    const profilePhoto: string = req.body.profilePhoto;
-    const status: Status = Status.PENDING;
-    const userid = parseFloat(req.params.id);
-    const company = req.body.company || null;
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res
-            .status(422)
-            .json({ message: "Validation error", errors: errors.array() });
-    }
-    try {
-        const profile = await Profile.findOne({
-            where: { user: userid },
-        });
-
-        if (profile) {
-            res.status(400).json({ message: "Profile already exsists" });
-        }
-
-        await Profile.create({
-            name: name,
-            profilePhoto: profilePhoto,
-            status: status,
-            user: userid,
-            company,
-        });
-
-        res.status(200).json({ message: "Profile created" });
-    } catch (err) {
-        res.status(500).json({ message: "Error adding profile" });
-    }
-};
+import User from "../models/User";
 
 const getAllProfiles = async (req: Request, res: Response) => {
     try {
@@ -51,7 +16,6 @@ const getAllProfiles = async (req: Request, res: Response) => {
 
         res.status(200).json({ profiles: profiles });
     } catch (err) {
-        console.log(err);
         res.status(500).json({ message: "error loading profiles" });
     }
 };
@@ -75,7 +39,13 @@ const getProfilebyId = async (req: Request, res: Response) => {
 };
 
 const deleteProfile = async (req: Request, res: Response) => {
+    const passportData = req.user as User;
     const id = Number(req.params.uid);
+
+    if (passportData.id !== id) {
+        return res.status(403).json({ message: "Not authorized" });
+    }
+
     try {
         const profile = await Profile.findOne({
             where: { user: id },
@@ -103,12 +73,23 @@ const updateProfile = async (req: Request, res: Response) => {
             .json({ message: "Validation error", errors: errors.array() });
     }
     const id = Number(req.params.id);
+    const passportData = req.user as User;
+    if (passportData.id !== id) {
+        return res.status(403).json({ message: "Not authorized" });
+    }
+
     //Express validator check user exists now confirming that profile exsists
     const profile = await Profile.findOne({
         where: { user: id },
     });
 
     const name = req.body.name;
+    if (passportData.username === name) {
+        return res
+            .status(422)
+            .json({ message: "Name and username cannot be the same" });
+    }
+
     const profilePhoto = req.body.profilePhoto;
     const company = req.body.company || profile?.company;
     try {
@@ -144,7 +125,7 @@ const updateProfile = async (req: Request, res: Response) => {
 const userControls = {
     getAllProfiles,
     getProfilebyId,
-    postAddProfile,
+    // postAddProfile,
     updateProfile,
     deleteProfile,
 };

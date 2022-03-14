@@ -1,19 +1,21 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
 import { validationResult } from "express-validator";
-import jwt from "jsonwebtoken";
+import * as jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { UserRole } from "../types/types";
-
+import { UserRole, Status } from "../types/types";
 import User from "../models/User";
+import Company from "../models/companies";
 import Profile from "../models/Profile";
+import slugify from "../util/slug";
+import { Op } from "sequelize";
+import sequelize from "../config/database";
 
 dotenv.config();
 
 const postAddUser = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        console.log(errors);
         return res
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });
@@ -22,19 +24,59 @@ const postAddUser = async (req: Request, res: Response) => {
     const email = req.body.email;
     const password =
         req.body.password && (await bcrypt.hash(req.body.password, 12));
-    const role = UserRole.COMPANYUSER;
+    const role = UserRole.COMPANYADMIN;
+    const name: string = req.body.name;
+    const profilePhoto: string =
+        req.body.profilePhoto ||
+        "https://mom.rs/wp-content/uploads/2016/10/test-logo.png";
+    const companyName: string = req.body.companyName || `${username}'s company`;
+    const logo: string =
+        req.body.logo ||
+        "https://mom.rs/wp-content/uploads/2016/10/test-logo.png";
+    const slug = slugify(companyName);
+
+    if (name === username) {
+        return res.status(422).json({
+            message: "Validation error",
+            errors: ["name cannot be same as username"],
+        });
+    }
 
     try {
-        await User.create({
-            username,
-            password,
-            email,
-            role,
-        }).then((result) => {
-            console.log("Created new User", result);
+        await sequelize.transaction(async (t) => {
+            const newUser = await User.create(
+                {
+                    username,
+                    password,
+                    email,
+                    role,
+                },
+                { transaction: t }
+            );
+            console.log(newUser.id);
+            await Profile.create(
+                {
+                    name: name,
+                    profilePhoto: profilePhoto,
+                    status: Status.PENDING,
+                    user: newUser.id,
+                    company: null,
+                },
+                { transaction: t }
+            );
+
+            await Company.create(
+                {
+                    name: companyName,
+                    logo: logo,
+                    slug: slug,
+                    companyOwner: newUser.id,
+                },
+                { transaction: t }
+            );
         });
     } catch (err) {
-        console.log(err);
+        return res.status(501);
     }
 
     res.status(201).json("User created");
@@ -65,6 +107,10 @@ const deleteUser = async (req: Request, res: Response) => {
     //We are checking if user has a profile. If so, profile is being deleted and then the user
 
     const id = Number(req.params.uid);
+    const passportData = req.user as User;
+    if (passportData.id !== id) {
+        return res.status(403).json({ message: "Not authorized" });
+    }
 
     try {
         const profile = await Profile.findOne({
@@ -93,8 +139,6 @@ const deleteUser = async (req: Request, res: Response) => {
             res.status(400).json({ message: "User doesn't exist" });
         }
     } catch (err) {
-        console.log(err);
-
         res.status(500).json({ message: "error deleting user" });
     }
 };
@@ -102,13 +146,19 @@ const deleteUser = async (req: Request, res: Response) => {
 const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        console.log(errors);
         return res
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });
     }
 
     const id = Number(req.params.uid) || 0;
+    //in order to be able to edit user it needs to be its own profile
+
+    const passportData = req.user as User;
+    if (passportData.id !== id) {
+        return res.status(403).json({ message: "Not authorized" });
+    }
+
     const password =
         req.body.password && (await bcrypt.hash(req.body.password, 12));
     const email = req.body.email;
@@ -118,6 +168,7 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
 
     //username in jwt token and not editable at the moment
     const username = user?.username;
+    const role = user?.role;
     //allowing email change at the moment as long as email is not assigned to a different user
     let userEmail;
 
@@ -140,7 +191,7 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
                     username,
                     password,
                     email,
-                    role: UserRole.COMPANYUSER,
+                    role,
                 },
                 {
                     where: {
@@ -160,38 +211,26 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
 const postLogin = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        console.log(errors);
         return res
             .status(422)
             .json({ message: "Validation error", errors: errors.array() });
     }
-    const { username, password, email } = req.body;
+    const username = req.body.username;
     let user;
 
     try {
         if (username) {
             user = await User.findOne({
-                where: { username: username },
-            });
-        } else if (email) {
-            user = await User.findOne({
-                where: { email: email },
+                where: {
+                    [Op.or]: [{ username: username }, { email: username }],
+                },
             });
         }
 
         if (!user) {
             return res
                 .status(403)
-                .json({ message: "user not found", user: username || email });
-        }
-
-        // check if password matches
-        const result = await bcrypt.compare(password, user.password);
-        if (!result) {
-            return res.status(403).json({
-                message: "Wrong password",
-                username: username || email,
-            });
+                .json({ message: "user not found", user: username });
         }
 
         // if process.env.JWT_SECRET is not defined throw an 500 error
@@ -200,9 +239,13 @@ const postLogin = async (req: Request, res: Response) => {
         }
 
         // create a token
-        const token = jwt.sign({ username: username }, process.env.JWT_SECRET, {
-            expiresIn: "8h",
-        });
+        const token = jwt.sign(
+            { username: user.username },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "16h",
+            }
+        );
 
         return res.status(200).json({ message: "OK", token: token });
     } catch (err) {
